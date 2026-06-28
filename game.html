@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FakeStreamer - Stream Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, #0f3460 0%, #16213e 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border-bottom: 3px solid #e94560;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e94560;
+            text-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+
+        .nav-stats {
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+            font-size: 16px;
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 180px;
+            background: rgba(15, 52, 96, 0.8);
+            padding: 20px;
+            border-right: 2px solid #e94560;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .menu-title {
+            font-size: 14px;
+            color: #e94560;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .menu-btn {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .menu-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            transform: translateX(5px);
+        }
+
+        .menu-btn.active {
+            background: rgba(0, 255, 136, 0.3);
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-header {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .stream-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stream-info {
+            background: rgba(0, 255, 136, 0.05);
+            border: 2px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .stream-stats-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stream-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            border-left: 3px solid #00ff88;
+        }
+
+        .stream-stat span:last-child {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .stream-title-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stream-title-section label {
+            color: #aaa;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .stream-title-section input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .stream-title-section input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .stream-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stream-events-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .events-title {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .stream-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .feed-item {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 8px 10px;
+            border-radius: 5px;
+            border-left: 3px solid #00ff88;
+            font-size: 12px;
+            color: #ddd;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6f 100%);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff3232 0%, #cc2626 100%);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 50, 50, 0.3);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(255, 50, 50, 0.5);
+        }
+
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .chat-container {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .chat-message {
+            background: rgba(0, 255, 136, 0.1);
+            padding: 10px 12px;
+            border-radius: 5px;
+            border-left: 3px solid #00ff88;
+            font-size: 13px;
+        }
+
+        .chat-message.system {
+            background: rgba(233, 69, 96, 0.1);
+            border-left-color: #e94560;
+            color: #e94560;
+        }
+
+        .chat-message .username {
+            color: #00ff88;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .chat-input-section {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-section input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .chat-input-section input:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .shop-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .shop-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(0, 255, 136, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .shop-item:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .shop-item-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .shop-item-name {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .shop-item-price {
+            color: #ffdd00;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card-value {
+            color: #00ff88;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .right-sidebar {
+            width: 250px;
+            background: rgba(15, 52, 96, 0.8);
+            padding: 20px;
+            border-left: 2px solid #e94560;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .section-title {
+            color: #e94560;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            padding: 15px 20px;
+            color: #00ff88;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer" class="game-container">
+        <div class="navbar">
+            <div class="logo">🎮 FakeStreamer</div>
+            <div class="nav-stats">
+                <div class="stat">
+                    <span class="stat-label">💰 Money:</span>
+                    <span id="money" class="stat-value">$1000</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">👥 Followers:</span>
+                    <span id="followers" class="stat-value">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">⭐ Reputation:</span>
+                    <span id="reputation" class="stat-value">50%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="menu-title">Dashboard</div>
+                <button class="menu-btn active" data-tab="stream">📹 Stream</button>
+                <button class="menu-btn" data-tab="chat">💬 Chat</button>
+                <button class="menu-btn" data-tab="shop">🛒 Shop</button>
+                <button class="menu-btn" data-tab="stats">📊 Stats</button>
+                <hr style="border: none; border-top: 1px solid rgba(0, 255, 136, 0.3); margin: 10px 0;">
+                <button class="menu-btn save-btn" id="saveBtn">💾 Save Game</button>
+                <button class="menu-btn load-btn" id="loadBtn">📂 Load Game</button>
+                <button class="menu-btn reset-btn" id="resetBtn">🔄 New Game</button>
+            </div>
+
+            <div class="content-area">
+                <div id="stream" class="tab-content active">
+                    <div class="tab-header">📹 Your Stream</div>
+                    
+                    <div class="stream-container">
+                        <div class="stream-info">
+                            <div class="stream-stats-box">
+                                <div class="stream-stat">
+                                    <span>Current Viewers:</span>
+                                    <span id="viewers">0</span>
+                                </div>
+                                <div class="stream-stat">
+                                    <span>Stream Uptime:</span>
+                                    <span id="uptime">0:00</span>
+                                </div>
+                                <div class="stream-stat">
+                                    <span>Stream Quality:</span>
+                                    <span id="quality">480p</span>
+                                </div>
+                            </div>
+
+                            <div class="stream-title-section">
+                                <label>Stream Title:</label>
+                                <input type="text" id="streamTitle" placeholder="Enter stream title..." value="Just Chatting">
+                                <label>Game Being Played:</label>
+                                <input type="text" id="gameTitle" placeholder="Enter game name..." value="Not Playing">
+                            </div>
+                        </div>
+
+                        <div class="stream-controls">
+                            <button id="startStreamBtn" class="btn btn-primary">🔴 Start Stream</button>
+                            <button id="stopStreamBtn" class="btn btn-danger" disabled>⏹ Stop Stream</button>
+                        </div>
+
+                        <div class="stream-events-box">
+                            <div class="events-title">Stream Feed</div>
+                            <div id="streamFeed" class="stream-feed"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="chat" class="tab-content">
+                    <div class="tab-header">💬 Chat Messages</div>
+                    
+                    <div class="chat-container">
+                        <div id="chatBox" class="chat-box"></div>
+                        <div class="chat-input-section">
+                            <input type="text" id="chatInput" placeholder="Type a message...">
+                            <button id="sendChatBtn" class="btn btn-primary">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="shop" class="tab-content">
+                    <div class="tab-header">🛒 Equipment Shop</div>
+                    
+                    <div class="shop-container">
+                        <div id="shopItems" class="shop-grid"></div>
+                    </div>
+                </div>
+
+                <div id="stats" class="tab-content">
+                    <div class="tab-header">📊 Statistics</div>
+                    
+                    <div class="stats-container">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div>Total Streams</div>
+                                <div id="totalStreams" class="stat-card-value">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div>Total Hours</div>
+                                <div id="totalHours" class="stat-card-value">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div>Total Earned</div>
+                                <div id="totalMoney" class="stat-card-value">$0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div>Max Viewers</div>
+                                <div id="maxViewers" class="stat-card-value">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-sidebar">
+                <div class="sidebar-section">
+                    <div class="section-title">⚡ Quick Actions</div>
+                    <button id="collectTipsBtn" class="btn btn-primary btn-small">Collect Tips</button>
+                    <button id="advertiseBtn" class="btn btn-primary btn-small">📣 Advertise</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Game State
+        const gameState = {
+            money: 1000,
+            followers: 0,
+            reputation: 50,
+            isStreaming: false,
+            currentViewers: 0,
+            streamUptime: 0,
+            streamTitle: "Just Chatting",
+            gameTitle: "Not Playing",
+            totalStreams: 0,
+            totalHours: 0,
+            totalEarned: 0,
+            maxViewers: 0,
+            qualityLevel: 1,
+        };
+
+        const shopItems = [
+            { id: 1, name: 'HD Camera', icon: '📷', price: 500, quality: 720, viewers: 20 },
+            { id: 2, name: '1080p Camera', icon: '📷', price: 1500, quality: 1080, viewers: 30 },
+            { id: 3, name: '4K Camera', icon: '📷', price: 5000, quality: 4000, viewers: 50 },
+            { id: 4, name: 'USB Microphone', icon: '🎤', price: 300, viewers: 10 },
+            { id: 5, name: 'Condenser Mic', icon: '🎤', price: 800, viewers: 20 },
+            { id: 6, name: 'Ring Light', icon: '💡', price: 200, viewers: 8 },
+            { id: 7, name: 'Studio Lights', icon: '💡', price: 800, viewers: 15 },
+            { id: 8, name: 'Gaming PC', icon: '💻', price: 2000, viewers: 25 },
+            { id: 9, name: 'Stream Deck', icon: '💻', price: 300, viewers: 10 },
+        ];
+
+        let owned = [];
+        let chatNames = ['xXGamer123Xx', 'StreamMaster', 'NinjaKitty', 'PixelGhost', 'CyberPhoenix', 'ThunderStrike', 'SilentHunter'];
+        let chatMessages = ['this is awesome!', 'yo!', 'PogU', 'nice!', 'follow!', 'clip it!', 'best!'];
+
+        // DOM Elements
+        const menuBtns = document.querySelectorAll('.menu-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const startStreamBtn = document.getElementById('startStreamBtn');
+        const stopStreamBtn = document.getElementById('stopStreamBtn');
+        const streamFeed = document.getElementById('streamFeed');
+        const chatBox = document.getElementById('chatBox');
+        const chatInput = document.getElementById('chatInput');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+        const shopItems_el = document.getElementById('shopItems');
+
+        // Initialize
+        function init() {
+            setupMenus();
+            setupStreamButtons();
+            setupChat();
+            setupShop();
+            setupSave();
+            updateDisplay();
+            loadGame();
+        }
+
+        function setupMenus() {
+            menuBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabName = btn.dataset.tab;
+                    if (!tabName) return;
+                    menuBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    tabContents.forEach(t => t.classList.remove('active'));
+                    document.getElementById(tabName)?.classList.add('active');
+                    if (tabName === 'shop') refreshShop();
+                    if (tabName === 'stats') refreshStats();
+                });
+            });
+        }
+
+        function setupStreamButtons() {
+            startStreamBtn.addEventListener('click', startStream);
+            stopStreamBtn.addEventListener('click', stopStream);
+            document.getElementById('collectTipsBtn').addEventListener('click', collectTips);
+            document.getElementById('advertiseBtn').addEventListener('click', advertise);
+        }
+
+        function startStream() {
+            gameState.isStreaming = true;
+            gameState.streamUptime = 0;
+            gameState.totalStreams++;
+            startStreamBtn.disabled = true;
+            stopStreamBtn.disabled = false;
+            addStreamFeed('🔴 Stream Started!');
+            showNotif('Stream started!', 'success');
+            simulateStream();
+        }
+
+        function stopStream() {
+            gameState.isStreaming = false;
+            startStreamBtn.disabled = false;
+            stopStreamBtn.disabled = true;
+            gameState.totalHours += Math.floor(gameState.streamUptime / 3600);
+            gameState.followers += Math.floor(gameState.currentViewers * 0.05);
+            addStreamFeed(`⏹ Stream ended! +${Math.floor(gameState.currentViewers * 0.05)} followers`);
+            gameState.currentViewers = 0;
+            gameState.streamUptime = 0;
+            updateDisplay();
+        }
+
+        function simulateStream() {
+            if (!gameState.isStreaming) return;
+            gameState.streamUptime++;
+            
+            let viewers = Math.floor(gameState.followers * 0.15) + Math.random() * 50;
+            let equipBonus = 0;
+            owned.forEach(item => {
+                if (item.viewers) equipBonus += item.viewers;
+            });
+            gameState.currentViewers = Math.max(0, viewers + equipBonus);
+            if (gameState.currentViewers > gameState.maxViewers) gameState.maxViewers = gameState.currentViewers;
+
+            if (Math.random() < 0.15) {
+                const donation = Math.floor(Math.random() * 50) + 5;
+                gameState.money += donation;
+                gameState.totalEarned += donation;
+                addChat(chatNames[Math.floor(Math.random() * chatNames.length)], `Donated $${donation}! 💰`);
+            }
+
+            if (Math.random() < 0.08 && gameState.currentViewers > 10) {
+                gameState.followers += Math.floor(Math.random() * 5) + 1;
+            }
+
+            updateDisplay();
+            setTimeout(simulateStream, 1000);
+        }
+
+        function collectTips() {
+            if (!gameState.isStreaming) {
+                showNotif('Start streaming first!', 'warning');
+                return;
+            }
+            let tips = Math.floor(gameState.currentViewers * 0.5);
+            gameState.money += tips;
+            gameState.totalEarned += tips;
+            showNotif(`Collected $${tips}!`, 'success');
+            updateDisplay();
+        }
+
+        function advertise() {
+            if (gameState.money < 500) {
+                showNotif('Need $500!', 'danger');
+                return;
+            }
+            gameState.money -= 500;
+            gameState.followers += Math.floor(Math.random() * 100) + 50;
+            showNotif('Advertised! Gained followers!', 'success');
+            updateDisplay();
+        }
+
+        function setupChat() {
+            sendChatBtn.addEventListener('click', sendChatMsg);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendChatMsg();
+            });
+            setInterval(() => {
+                if (gameState.isStreaming && Math.random() < 0.3) {
+                    addChat(chatNames[Math.floor(Math.random() * chatNames.length)], chatMessages[Math.floor(Math.random() * chatMessages.length)]);
+                }
+            }, 2000);
+        }
+
+        function sendChatMsg() {
+            let msg = chatInput.value.trim();
+            if (!msg) return;
+            if (!gameState.isStreaming) {
+                showNotif('Start streaming!', 'warning');
+                return;
+            }
+            addChat('You', msg, 'user');
+            chatInput.value = '';
+        }
+
+        function addChat(user, msg, type = 'chat') {
+            let el = document.createElement('div');
+            el.className = 'chat-message' + (type === 'user' ? ' user' : '');
+            el.innerHTML = `<span class="username">${user}:</span> ${msg}`;
+            chatBox.appendChild(el);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            while (chatBox.children.length > 50) chatBox.removeChild(chatBox.firstChild);
+        }
+
+        function setupShop() {
+            refreshShop();
+        }
+
+        function refreshShop() {
+            shopItems_el.innerHTML = '';
+            shopItems.forEach(item => {
+                let isOwned = owned.some(o => o.id === item.id);
+                let el = document.createElement('div');
+                el.className = 'shop-item' + (isOwned ? ' owned' : '');
+                el.innerHTML = `
+                    <div class="shop-item-icon">${item.icon}</div>
+                    <div class="shop-item-name">${item.name}</div>
+                    <div class="shop-item-price">$${item.price}</div>
+                    <button class="btn btn-primary" ${isOwned ? 'disabled' : ''}>${isOwned ? '✓ Owned' : 'Buy'}</button>
+                `;
+                if (!isOwned) {
+                    el.querySelector('button').addEventListener('click', () => buyItem(item));
+                }
+                shopItems_el.appendChild(el);
+            });
+        }
+
+        function buyItem(item) {
+            if (owned.some(o => o.id === item.id)) {
+                showNotif('Already owned!', 'warning');
+                return;
+            }
+            if (gameState.money < item.price) {
+                showNotif('Not enough money!', 'danger');
+                return;
+            }
+            gameState.money -= item.price;
+            owned.push(item);
+            showNotif(`Bought ${item.name}!`, 'success');
+            addStreamFeed(`🛒 Bought ${item.name}!`);
+            updateDisplay();
+            refreshShop();
+        }
+
+        function refreshStats() {
+            document.getElementById('totalStreams').textContent = gameState.totalStreams;
+            document.getElementById('totalHours').textContent = gameState.totalHours;
+            document.getElementById('totalMoney').textContent = '$' + gameState.totalEarned;
+            document.getElementById('maxViewers').textContent = gameState.maxViewers;
+        }
+
+        function updateDisplay() {
+            document.getElementById('money').textContent = '$' + gameState.money.toFixed(0);
+            document.getElementById('followers').textContent = gameState.followers;
+            document.getElementById('reputation').textContent = gameState.reputation + '%';
+            document.getElementById('viewers').textContent = Math.floor(gameState.currentViewers);
+            document.getElementById('uptime').textContent = formatTime(gameState.streamUptime);
+            document.getElementById('quality').textContent = (480 + owned.filter(o => o.quality).reduce((a, b) => Math.max(a, b.quality || 0), 0)) + 'p';
+            document.getElementById('streamTitle').value = gameState.streamTitle;
+            document.getElementById('gameTitle').value = gameState.gameTitle;
+        }
+
+        function formatTime(s) {
+            let h = Math.floor(s / 3600);
+            let m = Math.floor((s % 3600) / 60);
+            let sec = s % 60;
+            return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}` : `${m}:${String(sec).padStart(2, '0')}`;
+        }
+
+        function addStreamFeed(msg) {
+            let el = document.createElement('div');
+            el.className = 'feed-item';
+            el.textContent = msg;
+            streamFeed.insertBefore(el, streamFeed.firstChild);
+            while (streamFeed.children.length > 20) streamFeed.removeChild(streamFeed.lastChild);
+        }
+
+        function showNotif(msg, type = 'success') {
+            let notif = document.getElementById('notification');
+            notif.textContent = msg;
+            notif.className = `notification show ${type}`;
+            setTimeout(() => notif.classList.remove('show'), 3000);
+        }
+
+        function setupSave() {
+            document.getElementById('saveBtn').addEventListener('click', saveGame);
+            document.getElementById('loadBtn').addEventListener('click', loadGame);
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                if (confirm('Reset game?')) {
+                    localStorage.removeItem('fakestreamer_save');
+                    location.reload();
+                }
+            });
+        }
+
+        function saveGame() {
+            localStorage.setItem('fakestreamer_save', JSON.stringify({ gameState, owned }));
+            showNotif('Game saved!', 'success');
+        }
+
+        function loadGame() {
+            let data = localStorage.getItem('fakestreamer_save');
+            if (data) {
+                let save = JSON.parse(data);
+                Object.assign(gameState, save.gameState);
+                owned = save.owned || [];
+                updateDisplay();
+                refreshShop();
+                showNotif('Game loaded!', 'success');
+            }
+        }
+
+        document.getElementById('streamTitle').addEventListener('change', (e) => gameState.streamTitle = e.target.value);
+        document.getElementById('gameTitle').addEventListener('change', (e) => gameState.gameTitle = e.target.value);
+
+        // Auto-save
+        setInterval(() => {
+            if (gameState.isStreaming) saveGame();
+        }, 30000);
+
+        // Start
+        init();
+    </script>
+</body>
+</html>
